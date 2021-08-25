@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/go-github/v38/github"
 	"golang.org/x/oauth2"
+	"regexp"
 )
 
 func main() {
@@ -25,6 +26,11 @@ func main() {
 		"#+CATEGORY: Github",
 		"",
 	}
+	reg, err := regexp.Compile("[^a-zA-Z]+")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	// list all repositories for the authenticated user for the selected repos
 	for _, r := range reposlist {
 		o = append(o, fmt.Sprintf("* %s", r))
@@ -38,13 +44,13 @@ func main() {
 			os.Exit(1)
 		}
 		for _, i := range issues {
-			st := ""
-			if *i.State == "open" {
-				st = "TODO"
-			} else {
-				st = "DONE"
+
+			// add org- and repo-name to tags
+			labels := fmt.Sprintf(":%s:%s:", reg.ReplaceAllString(data[0], ""), reg.ReplaceAllLiteralString(data[1], ""))
+			for _, l := range *&i.Labels {
+				labels = labels + reg.ReplaceAllString(*l.Name, "") + ":"
 			}
-			o = append(o, fmt.Sprintf("** %s - %s", st, *i.Title))
+			o = append(o, fmt.Sprintf("** TODO %s \t\t %s", *i.Title, labels))
 			// the timestamps have been created without < & > intentionally
 			// I do not want them to show up in the daily agenda
 			o = append(o, fmt.Sprintf("    Created: %s", *i.CreatedAt))
