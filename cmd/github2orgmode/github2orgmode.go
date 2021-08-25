@@ -60,7 +60,7 @@ func main() {
 			}
 			o = append(o, fmt.Sprintf("\t[%s]", i.GetURL()))
 			o = append(o, "\n")
-			o = append(o, i.GetBody())
+			o = append(o, strings.ReplaceAll(i.GetBody(), "\r\n", "\n"))
 		}
 	}
 	fmt.Printf(strings.Join(o, "\n") + "\n")
