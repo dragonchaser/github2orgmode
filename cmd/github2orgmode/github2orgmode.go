@@ -47,19 +47,20 @@ func main() {
 
 			// add org- and repo-name to tags
 			labels := fmt.Sprintf(":%s:%s:", reg.ReplaceAllString(data[0], ""), reg.ReplaceAllLiteralString(data[1], ""))
-			for _, l := range *&i.Labels {
-				labels = labels + reg.ReplaceAllString(*l.Name, "") + ":"
+			for _, l := range i.Labels {
+				labels = labels + reg.ReplaceAllString(l.GetName(), "") + ":"
 			}
-			o = append(o, fmt.Sprintf("** TODO %s \t\t %s", *i.Title, labels))
+			o = append(o, fmt.Sprintf("** TODO %s \t\t %s", i.GetTitle(), labels))
 			// the timestamps have been created without < & > intentionally
 			// I do not want them to show up in the daily agenda
-			o = append(o, fmt.Sprintf("\tCreated  : %s", *i.CreatedAt))
-			o = append(o, fmt.Sprintf("\tUpdated  : %s", *i.UpdatedAt))
+			o = append(o, fmt.Sprintf("\tCreated  : %s", i.GetCreatedAt()))
+			o = append(o, fmt.Sprintf("\tUpdated  : %s", i.GetUpdatedAt()))
 			for _, a := range i.Assignees {
 				o = append(o, fmt.Sprintf("\tAssignee : %s", a.GetLogin()))
 			}
-			o = append(o, fmt.Sprintf("\t[%s]", *i.URL))
+			o = append(o, fmt.Sprintf("\t[%s]", i.GetURL()))
 			o = append(o, "\n")
+			o = append(o, i.GetBody())
 		}
 	}
 	fmt.Printf(strings.Join(o, "\n") + "\n")
