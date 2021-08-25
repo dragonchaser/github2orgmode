@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/google/go-github/v38/github"
-	"golang.org/x/oauth2"
 	"os"
 	"strings"
+
+	"github.com/google/go-github/v38/github"
+	"golang.org/x/oauth2"
 )
 
 func main() {
@@ -19,11 +20,17 @@ func main() {
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
-	// list all repositories for the authenticated user
+	o := []string{
+		fmt.Sprintf("#+TITLE: Github issues for %s", strings.Join(reposlist, ", ")),
+		"#+CATEGORY: Github",
+		"",
+	}
+	// list all repositories for the authenticated user for the selected repos
 	for _, r := range reposlist {
+		o = append(o, fmt.Sprintf("* %s", r))
 		data := strings.Split(r, "/")
 		opts := github.IssueListByRepoOptions{
-			State: "all",
+			State: "open",
 		}
 		issues, _, err := client.Issues.ListByRepo(ctx, data[0], data[1], &opts)
 		if err != nil {
@@ -31,7 +38,20 @@ func main() {
 			os.Exit(1)
 		}
 		for _, i := range issues {
-			fmt.Printf("[%s] %s - %s\n", *i.State, r, *i.Title)
+			st := ""
+			if *i.State == "open" {
+				st = "TODO"
+			} else {
+				st = "DONE"
+			}
+			o = append(o, fmt.Sprintf("** %s - %s", st, *i.Title))
+			// the timestamps have been created without < & > intentionally
+			// I do not want them to show up in the daily agenda
+			o = append(o, fmt.Sprintf("    Created: %s", *i.CreatedAt))
+			o = append(o, fmt.Sprintf("    Updated: %s", *i.UpdatedAt))
+			o = append(o, fmt.Sprintf("    [%s]", *i.URL))
+			o = append(o, "\n")
 		}
 	}
+	fmt.Printf(strings.Join(o, "\n") + "\n")
 }
