@@ -55,6 +55,7 @@ func main() {
 			// I do not want them to show up in the daily agenda
 			o = append(o, fmt.Sprintf("\tCreated  : %s", i.GetCreatedAt()))
 			o = append(o, fmt.Sprintf("\tUpdated  : %s", i.GetUpdatedAt()))
+			o = append(o, fmt.Sprintf("\tCreator  : %s", i.GetUser().GetLogin()))
 			for _, a := range i.Assignees {
 				o = append(o, fmt.Sprintf("\tAssignee : %s", a.GetLogin()))
 			}
