@@ -53,9 +53,12 @@ func main() {
 			o = append(o, fmt.Sprintf("** TODO %s \t\t %s", *i.Title, labels))
 			// the timestamps have been created without < & > intentionally
 			// I do not want them to show up in the daily agenda
-			o = append(o, fmt.Sprintf("    Created: %s", *i.CreatedAt))
-			o = append(o, fmt.Sprintf("    Updated: %s", *i.UpdatedAt))
-			o = append(o, fmt.Sprintf("    [%s]", *i.URL))
+			o = append(o, fmt.Sprintf("\tCreated  : %s", *i.CreatedAt))
+			o = append(o, fmt.Sprintf("\tUpdated  : %s", *i.UpdatedAt))
+			for _, a := range i.Assignees {
+				o = append(o, fmt.Sprintf("\tAssignee : %s", a.GetLogin()))
+			}
+			o = append(o, fmt.Sprintf("\t[%s]", *i.URL))
 			o = append(o, "\n")
 		}
 	}
