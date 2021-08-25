@@ -60,8 +60,14 @@ func main() {
 			}
 			o = append(o, fmt.Sprintf("\t[%s]", i.GetURL()))
 			o = append(o, "\n")
-			o = append(o, strings.ReplaceAll(i.GetBody(), "\r\n", "\n"))
+			o = append(o, formatBody(i.GetBody()))
+			o = append(o, "\n")
 		}
 	}
 	fmt.Printf(strings.Join(o, "\n") + "\n")
+}
+
+func formatBody(body string) string {
+	body = strings.ReplaceAll(body, "\r\n", "\n\t")
+	return "\t" + body
 }
