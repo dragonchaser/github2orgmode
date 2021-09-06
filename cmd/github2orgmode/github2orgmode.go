@@ -34,10 +34,16 @@ func main() {
 	}
 	// list all repositories for the authenticated user for the selected repos
 	for _, r := range reposlist {
-		o = append(o, fmt.Sprintf("* %s", r))
+		project := fmt.Sprintf("* %s", r)
+		todo := []string{}
+		prog := []string{}
+		done := []string{}
 		data := strings.Split(r, "/")
 		opts := github.IssueListByRepoOptions{
-			State: "open",
+			State: "all",
+			ListOptions: github.ListOptions{
+				PerPage: 100000,
+			},
 		}
 		issues, _, err := client.Issues.ListByRepo(ctx, data[0], data[1], &opts)
 		if err != nil {
@@ -45,26 +51,49 @@ func main() {
 			os.Exit(1)
 		}
 		for _, i := range issues {
-
+			issue := []string{}
 			// add org- and repo-name to tags
 			labels := fmt.Sprintf(":%s:%s:", reg.ReplaceAllString(data[0], ""), reg.ReplaceAllLiteralString(data[1], ""))
 			for _, l := range i.Labels {
 				labels = labels + reg.ReplaceAllString(l.GetName(), "") + ":"
 			}
-			o = append(o, fmt.Sprintf("** TODO %s \t\t %s", i.GetTitle(), labels))
+			status := "TODO"
+			for _, a := range i.Assignees {
+				for _, handle := range handlelist {
+					if a.GetLogin() == handle {
+						status = "IN PROGRESS"
+					}
+				}
+			}
+			if i.GetState() == "closed" {
+				status = "DONE"
+			}
+			issue = append(issue, fmt.Sprintf("** %s %s \t\t %s", status, i.GetTitle(), labels))
+			issue = append(issue, fmt.Sprintf("\tState     : %s", i.GetState()))
+			issue = append(issue, fmt.Sprintf("\tCreator   : %s", i.GetUser().GetLogin()))
 			// the timestamps have been created without < & > intentionally
 			// I do not want them to show up in the daily agenda
-			o = append(o, fmt.Sprintf("\tCreated  : %s", i.GetCreatedAt()))
-			o = append(o, fmt.Sprintf("\tUpdated  : %s", i.GetUpdatedAt()))
-			o = append(o, fmt.Sprintf("\tCreator  : %s", i.GetUser().GetLogin()))
+			issue = append(issue, fmt.Sprintf("\tCreated   : %s", i.GetCreatedAt()))
+			issue = append(issue, fmt.Sprintf("\tUpdated   : %s", i.GetUpdatedAt()))
 			for _, a := range i.Assignees {
-				o = append(o, fmt.Sprintf("\tAssignee : %s", a.GetLogin()))
+				issue = append(issue, fmt.Sprintf("\tAssignee : %s", a.GetLogin()))
 			}
-			o = append(o, fmt.Sprintf("\t[%s]", i.GetURL()))
-			o = append(o, "\n")
-			o = append(o, formatBody(i.GetBody()))
-			o = append(o, "\n")
+			if i.GetState() == "closed" {
+				issue = append(issue, fmt.Sprintf("\tClosed at : %s", i.GetClosedAt()))
+			}
+			issue = append(issue, fmt.Sprintf("\t[%s]", i.GetURL()))
+			issue = append(issue, "\n")
+			issue = append(issue, formatBody(i.GetBody()))
+			issue = append(issue, "\n")
+			if status == "TODO" {
+				todo = append(todo, strings.Join(issue, "\n"))
+			} else if status == "DONE" {
+				done = append(done, strings.Join(issue, "\n"))
+			} else {
+				prog = append(prog, strings.Join(issue, "\n"))
+			}
 		}
+		o = append(o, project, strings.Join(prog, "\n"), strings.Join(todo, "\n"), strings.Join(done, "\n"))
 	}
 	fmt.Printf(strings.Join(o, "\n") + "\n")
 }
