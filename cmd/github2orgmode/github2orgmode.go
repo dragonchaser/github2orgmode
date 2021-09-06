@@ -13,6 +13,7 @@ import (
 
 func main() {
 	reposlist := strings.Fields(os.Getenv("GH_REPOS"))
+	handlelist := strings.Fields(os.Getenv("GH_HANDLES"))
 	token := os.Getenv("GH_TOKEN")
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
